@@ -227,6 +227,23 @@ parameter COMPILE_HISTOGRAM_SUPPORT = 0;
 wire video_clk_40Mhz;
 wire vga_de;
 
+//LFSR
+logic [4:0] lfsr_data;
+logic lfsr_reset;
+logic Clock_1Hz;
+logic async_lfsr_0;
+logic sync_lfsr_0;
+
+//DDS
+wire [12:0] dds_sin_out;
+wire [12:0] dds_cos_out;
+wire [12:0] dds_sq_out;
+wire [12:0] dds_saw_out;
+
+// modulation DDS
+wire [12:0] dds_sin_ASK;
+wire [12:0] dds_sin_BPSK;
+
 //VGA
 wire [10:0]CounterX;
 wire [10:0]CounterY;
@@ -430,7 +447,48 @@ DE2_QSYS U0(
 // 
 //                       Put DDS + LFSR Code Here
 //
-////////////////////////////////////////////////////////////////////		   
+////////////////////////////////////////////////////////////////////		
+
+/// LFSR code
+Generate_Arbitrary_Divided_Clk32 
+Gen_1Hz_clk
+(.inclk(CLOCK_50),
+.outclk(Clock_1Hz),
+.outclk_Not(),
+.div_clk_count(32'h17D7840),
+.Reset(1'h1)
+); 
+
+lfsr_5b lfsr_inst(	.clk(Clock_1Hz),
+							.reset(lfsr_reset),
+							.q(lfsr_data));
+   
+/// DDS code
+waveform_gen waveform_gen_inst(	.clk(CLOCK_50),
+											.reset(1'b1),
+											.en(1'b1),
+											.phase_inc(32'h2B),
+											.sin_out(dds_sin_out),
+											.cos_out(dds_cos_out),
+											.squ_out(dds_sq_out),
+											.saw_out(dds_saw_out));
+											
+/// Modulate DDS with LFSR 
+// Synchronize the LFSR bitstream
+clock_domain_sync #(1) LFSR_bit_sync(
+									.fast_clk(CLOCK_50),
+									.slow_clk(Clock_1Hz),
+									.async_data_in(async_lfsr_0),
+									.sync_data_out(sync_lfsr_0));
+
+// I think this is synced to the 1Hz clock, need to cross clock domains									
+assign async_lfsr_0 = lfsr_data[0];
+
+// ASK modulation 
+assign dds_sin_ASK = sync_lfsr_0 ? dds_sin_out : 12'b0;
+
+// BPSK modulation
+assign dds_sin_BPSK = {sync_lfsr_0, dds_sin_out[10:0]};
 
 
 (* keep = 1, preserve = 1 *) logic [11:0] actual_selected_modulation;

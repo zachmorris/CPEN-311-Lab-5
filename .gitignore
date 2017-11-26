@@ -49,6 +49,8 @@ timing
 # But not these files...
 !.gitignore
 !dds_and_nios_lab.v
+!lfsr_5b.sv
+!clock_domain_sync.sv
 
 # and not these folders...
 !/submission
