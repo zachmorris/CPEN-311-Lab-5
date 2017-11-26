@@ -1,0 +1,57 @@
+# Ignore everything
+/*
+
+
+# ignore Quartus II generated files
+*_generation_script*
+*_inst.vhd
+*.bak
+*.dbb
+*.cdf
+*.cmp
+*.done
+*.eqn
+*.hex
+*.html
+*.jdi
+*.jpg
+*.pin
+*.pof
+*.ptf.*
+*.qar
+*.qarlog
+*.qws
+*.qpf
+*.qsf
+*.qxp
+*.rpt
+*.sdc
+*.smsg
+*.sof
+*.sopc_builder
+*.summary
+*.tcl
+*.temp
+*~
+*example*
+*software*
+*sopc_*
+
+# ignore Quartus II generated folders
+*_sim
+db
+greybox_tmp
+incremental_db
+simulation
+testbench
+timing
+
+# But not these files...
+!.gitignore
+!dds_and_nios_lab.v
+
+# and not these folders...
+!/submission
+!/scratch
+
+# ...even if they are in subdirectories
