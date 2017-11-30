@@ -1,3 +1,5 @@
+// slow clk to fast clk
+
 module clock_domain_sync 
 						  #(	parameter width = 2	)
 							(	input logic fast_clk,
