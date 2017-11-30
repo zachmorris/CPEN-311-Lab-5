@@ -1,6 +1,6 @@
 module lfsr_5b(input logic clk,
 					input logic reset,
-					output logic [4:0] q);
+					output logic [4:0] q = 5'h1F);
 
 logic feedback;					
 					
