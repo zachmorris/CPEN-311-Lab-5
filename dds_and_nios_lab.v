@@ -235,14 +235,15 @@ logic async_lfsr_0;
 logic sync_lfsr_0;
 
 //DDS
-wire [12:0] dds_sin_out;
-wire [12:0] dds_cos_out;
-wire [12:0] dds_sq_out;
-wire [12:0] dds_saw_out;
+wire [11:0] dds_sin_out;
+wire [11:0] dds_cos_out;
+wire [11:0] dds_sq_out;
+wire [11:0] dds_saw_out;
 
 // modulation DDS
-wire [12:0] dds_sin_ASK;
-wire [12:0] dds_sin_BPSK;
+wire [11:0] dds_sin_ASK;
+wire [11:0] dds_sin_comp;
+wire [11:0] dds_sin_BPSK;
 
 //VGA
 wire [10:0]CounterX;
@@ -460,7 +461,7 @@ Gen_1Hz_clk
 ); 
 
 lfsr_5b lfsr_inst(	.clk(Clock_1Hz),
-							.reset(lfsr_reset),
+							.reset(lfsr_reset), // should set this to 0. How do we actually reset this D:
 							.q(lfsr_data));
    
 /// DDS code
@@ -488,7 +489,8 @@ assign async_lfsr_0 = lfsr_data[0];
 assign dds_sin_ASK = sync_lfsr_0 ? dds_sin_out : 12'b0;
 
 // BPSK modulation
-assign dds_sin_BPSK = {sync_lfsr_0, dds_sin_out[10:0]};
+assign dds_sin_BPSK = sync_lfsr_0 ? dds_sin_out : dds_sin_comp;
+assign dds_sin_comp = ~dds_sin_out + 12'b1;
 
 
 (* keep = 1, preserve = 1 *) logic [11:0] actual_selected_modulation;
