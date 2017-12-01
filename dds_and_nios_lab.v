@@ -231,7 +231,7 @@ wire vga_de;
 logic [4:0] lfsr_data;
 logic lfsr_reset;
 logic Clock_1Hz;
-logic async_lfsr_0;
+reg async_lfsr_0;
 logic sync_lfsr_0;
 
 //DDS
@@ -461,14 +461,14 @@ Gen_1Hz_clk
 ); 
 
 lfsr_5b lfsr_inst(	.clk(Clock_1Hz),
-							.reset(lfsr_reset), // should set this to 0. How do we actually reset this D:
+							.reset(!KEY[1]), // should set this to 0. How do we actually reset this D:
 							.q(lfsr_data));
    
 /// DDS code
 waveform_gen waveform_gen_inst(	.clk(CLOCK_50),
 											.reset(1'b1),
 											.en(1'b1),
-											.phase_inc(32'h2B),
+											.phase_inc(32'h81),
 											.sin_out(dds_sin_out),
 											.cos_out(dds_cos_out),
 											.squ_out(dds_sq_out),
@@ -479,11 +479,14 @@ waveform_gen waveform_gen_inst(	.clk(CLOCK_50),
 clock_domain_sync #(1) LFSR_bit_sync(
 									.fast_clk(CLOCK_50),
 									.slow_clk(Clock_1Hz),
-									.async_data_in(async_lfsr_0),
+									.async_data_in(lfsr_data[0]),
 									.sync_data_out(sync_lfsr_0));
 
 // I think this is synced to the 1Hz clock, need to cross clock domains									
-assign async_lfsr_0 = lfsr_data[0];
+
+
+	
+
 
 // ASK modulation 
 assign dds_sin_ASK = sync_lfsr_0 ? dds_sin_out : 12'b0;
@@ -492,6 +495,57 @@ assign dds_sin_ASK = sync_lfsr_0 ? dds_sin_out : 12'b0;
 assign dds_sin_BPSK = sync_lfsr_0 ? dds_sin_out : dds_sin_comp;
 assign dds_sin_comp = ~dds_sin_out + 12'b1;
 
+parameter [2:0] ASK_C = 3'b000;
+parameter [2:0] FSK_C = 3'b001;
+parameter [2:0] BPSK_C = 3'b010;
+parameter [2:0] LFSR_C = 3'b011;
+
+parameter [2:0] SIN_C = 3'b000;
+parameter [2:0] COS_C = 3'b001;
+parameter [2:0] SAW_C = 3'b010;
+parameter [2:0] SQUARE_C = 3'b011;
+
+
+
+wire dds_sin_FSK = 12'b0;
+wire [11:0] mod_data_to_slow;
+wire [11:0] sig_data_to_slow;
+
+
+fast_to_slow_clk #(12) mod_sync(
+.fast_clk(CLOCK_50),
+.slow_clk(sampler),
+.async_data_in(mod_data_to_slow),
+.sync_data_out(actual_selected_modulation));
+
+fast_to_slow_clk #(12) signal_sync(
+.fast_clk(CLOCK_50),
+.slow_clk(sampler),
+.async_data_in(sig_data_to_slow),
+.sync_data_out(actual_selected_signal));
+
+always_comb
+begin
+
+	case(modulation_selector)
+	ASK_C: 	mod_data_to_slow = dds_sin_ASK;
+	FSK_C: 	mod_data_to_slow = dds_sin_FSK;
+	BPSK_C: mod_data_to_slow = dds_sin_BPSK;
+	LFSR_C: mod_data_to_slow = {lfsr_data[0], 11'b0};
+	default: mod_data_to_slow = dds_sin_ASK;
+	
+	endcase
+	
+	case(signal_selector)
+	
+	SIN_C: sig_data_to_slow = dds_sin_out;
+	COS_C:	sig_data_to_slow = dds_cos_out;
+	SAW_C:	sig_data_to_slow = dds_saw_out;
+	SQUARE_C:	sig_data_to_slow = dds_sq_out;
+	default: sig_data_to_slow = dds_sin_out;
+	
+	endcase
+end
 
 (* keep = 1, preserve = 1 *) logic [11:0] actual_selected_modulation;
 (* keep = 1, preserve = 1 *) logic [11:0] actual_selected_signal;
