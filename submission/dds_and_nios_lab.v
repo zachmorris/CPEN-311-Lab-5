@@ -482,7 +482,7 @@ waveform_gen waveform_gen_inst(	.clk(CLOCK_50),
 											
 /// Modulate DDS with LFSR 
 // Synchronize the LFSR bitstream
-clock_domain_sync #(1) LFSR_bit_sync(
+slow_to_fast_clk #(1) LFSR_bit_sync(
 									.fast_clk(CLOCK_50),
 									.slow_clk(Clock_1Hz),
 									.async_data_in(lfsr_data[0]),
