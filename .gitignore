@@ -51,6 +51,7 @@ timing
 !dds_and_nios_lab.v
 !lfsr_5b.sv
 !clock_domain_sync.sv
+!DE2_QSYS.qsys
 
 # and not these folders...
 !/submission

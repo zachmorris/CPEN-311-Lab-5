@@ -289,6 +289,9 @@ wire [3:0]modulation_selector;
 wire [31:0]div_freq_count;
 wire [31:0]keyboard_keys;
 
+// student code nios
+wire dds_tuning_word;
+
 //Audio Generation Signal
 //Note that the audio needs signed data - so convert 1 bit to 8 bits signed
 wire [31:0]nios_audio_syn_data;
@@ -437,8 +440,11 @@ DE2_QSYS U0(
 	   .keyboard_keys_export                          (keyboard_keys[31:0]),                          //                   keyboard_keys.export
 	   .mouse_pos_export                              ({12'd0,mouse_x[9:0],mouse_y[9:0]}),                              //                       mouse_pos.export
 	   .div_freq_export                               (nios_audio_syn_data[31:0]),                               //                        div_freq.export
-	   .audio_sel_export                              (audio_selector),                               //                       audio_sel.export
-	   
+	   .audio_sel_export                              (audio_selector),                               //                       audio_sel.export                       
+		.lfsr_clk_interrupt_gen_export                 (Clock_1Hz),                               
+		.lfsr_val_export                               (sync_lfsr_0),                               
+		.dds_increment_export                          (dds_tuning_word),      	
+		
        .vga_vga_clk_clk                               ()
        
 	);
