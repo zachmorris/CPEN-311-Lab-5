@@ -290,7 +290,7 @@ wire [31:0]div_freq_count;
 wire [31:0]keyboard_keys;
 
 // student code nios
-wire dds_tuning_word;
+wire [31:0] dds_tuning_word;
 
 //Audio Generation Signal
 //Note that the audio needs signed data - so convert 1 bit to 8 bits signed
@@ -446,8 +446,8 @@ DE2_QSYS U0(
 		.dds_increment_export                          (dds_tuning_word),      	
 		
        .vga_vga_clk_clk                               ()
-       
 	);
+	
 	
 
 ////////////////////////////////////////////////////////////////////
@@ -530,15 +530,29 @@ fast_to_slow_clk #(12) signal_sync(
 .async_data_in(sig_data_to_slow),
 .sync_data_out(actual_selected_signal));
 
+wire [31:0] phase_div;
+
 always_comb
 begin
 
 	case(modulation_selector)
-	ASK_C: 	mod_data_to_slow = dds_sin_ASK;
-	FSK_C: 	mod_data_to_slow = dds_sin_FSK;
-	BPSK_C: mod_data_to_slow = dds_sin_BPSK;
-	LFSR_C: mod_data_to_slow = {lfsr_data[0], 11'b0};
-	default: mod_data_to_slow = dds_sin_ASK;
+	ASK_C: 	begin 	mod_data_to_slow = dds_sin_ASK;
+							phase_div = 32'h81;
+				end
+	FSK_C: 	begin		mod_data_to_slow = dds_sin_FSK;
+							phase_div = dds_tuning_word;
+				end
+	BPSK_C: 	begin		mod_data_to_slow = dds_sin_BPSK;
+							phase_div = 32'h81;
+				end
+	LFSR_C:	begin		mod_data_to_slow = {lfsr_data[0], 11'b0};
+							phase_div = 32'h81;
+				end
+	
+	default: begin
+							mod_data_to_slow = dds_sin_ASK;
+							phase_div = 32'h81;
+				end
 	
 	endcase
 	
